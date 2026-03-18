@@ -95,17 +95,17 @@ USE_I18N = True
 USE_TZ = True
 
 # 6. Static Files Configuration (CSS/JS/Images)
-# settings.py
-
 STATIC_URL = 'static/'
 
-# Add this to point specifically to your app's static folder
+# This is the "missing link" that was causing the crash
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'libwebb', 'static'),
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Use this specific WhiteNoise storage (it's more stable for first-time deploys)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
