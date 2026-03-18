@@ -153,7 +153,7 @@
                 <div class="error-msg">{{ error }}</div>
             {% endif %}
 
-            <form method="POST" action="{% url 'libwebb:login_view' %}">
+            <form method="POST" action="{% url 'libwebb:admindashboard' %}">
                 {% csrf_token %}
                 <div class="field">
                     <label>Username</label>
