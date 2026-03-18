@@ -84,18 +84,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'defaultdb',              # Change 'library' to your Cloud DB name
-        'USER': 'avnadmin',                # Change 'root' to your Cloud Username
-        'PASSWORD': 'DB_PASSWORD_HERE', # Enter your actual Cloud Password
-        'HOST': 'mysql-2f3f44fb-athulkrish36-84f9.a.aivencloud.com', # Change 127.0.0.1 to Cloud Host
-        'PORT': '24860',                  # Change 3306 to your Cloud Port (usually 25060)
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        # This line looks for the password you typed into Render's dashboard
+        'PASSWORD': os.getenv('DB_PASSWORD'), 
+        'HOST': 'mysql-2f3f44fb-athulkrish36-84f9.a.aivencloud.com',
+        'PORT': '24860',
         'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',
-            # --- MANDATORY CLOUD CHANGE ---
-            'ssl': {
-                'ca': os.path.join(BASE_DIR, 'ca-certificate.crt'),
-            },
+            # This fixes the "No such file" error on Render
+            'ssl': {'ca': None} if os.getenv('RENDER') else {'ca': os.path.join(BASE_DIR, 'ca-certificate.crt')},
         },
     }
 }
