@@ -150,3 +150,9 @@ def get_all_book_titles(request):
             return JsonResponse({'suggestions': suggestions})
     except Exception as e:
         return JsonResponse({'suggestions': []}, status=500)
+    
+def admindashboard(request):
+    # Security check to make sure only logged-in admins see this
+    if not request.session.get('is_admin_logged_in'):
+        return redirect('libwebb:adminlogin')
+    return render(request, 'admindashboard.html')

@@ -72,8 +72,8 @@ DATABASES = {
         'HOST': 'mysql-2f3f44fb-athulkrish36-84f9.a.aivencloud.com',
         'PORT': '24860',
         'OPTIONS': {
-            # SSL logic: Uses cert locally, bypasses on Render/Vercel
-            'ssl': {'ca': None} if os.getenv('RENDER') or os.getenv('VERCEL') else {'ca': os.path.join(BASE_DIR, 'ca-certificate.crt')},
+            # Fix: If on Cloud, use 'ssl_mode' rather than a missing file
+            'ssl': {'ca': os.path.join(BASE_DIR, 'ca-certificate.crt')} if not (os.getenv('RENDER') or os.getenv('VERCEL')) else {'ssl_mode': 'REQUIRED'},
         },
     }
 }
