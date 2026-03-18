@@ -300,7 +300,7 @@
         });
 
         function loadSuggestions() {
-            fetch('/libweb/get-all-titles/')
+            fetch('{% url "libwebb:get_all_titles" %}')
                 .then(r => r.json())
                 .then(data => {
                     const dl = document.getElementById('all_books_list');
@@ -326,7 +326,7 @@
         document.getElementById('search_btn').onclick = () => {
             const id = document.getElementById('up_book_id').value;
             if(!id) return;
-            fetch(`/libweb/get-book-details/?book_id=${encodeURIComponent(id)}`)
+            fetch('{% url "libwebb:get_book_details" %}?book_id=' + encodeURIComponent(id))
                 .then(r => r.json())
                 .then(data => {
                     if(data.success) {
