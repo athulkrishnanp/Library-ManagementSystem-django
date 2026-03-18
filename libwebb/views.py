@@ -15,25 +15,28 @@ def index(request):
     return render(request, 'index.html')
 
 def adminlogin(request):
-    # 1. If already logged in, don't show the login page, go straight to library
     if request.session.get('is_admin_logged_in'):
         return redirect('libwebb:library')
 
-    # 2. Handle the POST request (The actual login attempt)
     if request.method == "POST":
-        ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
-        ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+        # .strip() removes accidental spaces from your .env or the form
+        ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "").strip()
+        ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "").strip()
         
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
+
+        # Check if the variables actually loaded
+        if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+            return render(request, "adminlogin.html", {"error": "Server Error: Environment variables not found."})
 
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             request.session['is_admin_logged_in'] = True
+            # Forcing a hard refresh to the library path
             return redirect('libwebb:library')
         else:
             return render(request, "adminlogin.html", {"error": "Invalid Username or Password"})
 
-    # 3. Handle the GET request (Just showing the page)
     return render(request, "adminlogin.html")
 
 def logout_view(request):
