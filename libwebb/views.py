@@ -15,26 +15,25 @@ def index(request):
     return render(request, 'index.html')
 
 def adminlogin(request):
-    # If already logged in, skip login page
+    # 1. If already logged in, don't show the login page, go straight to library
     if request.session.get('is_admin_logged_in'):
         return redirect('libwebb:library')
-    return render(request, 'adminlogin.html')
 
-def login_view(request):
-    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
-    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
-
+    # 2. Handle the POST request (The actual login attempt)
     if request.method == "POST":
+        ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+        ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+        
         username = request.POST.get("username")
         password = request.POST.get("password")
 
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             request.session['is_admin_logged_in'] = True
-            # Standard Django session lasts for 2 weeks by default
             return redirect('libwebb:library')
         else:
             return render(request, "adminlogin.html", {"error": "Invalid Username or Password"})
 
+    # 3. Handle the GET request (Just showing the page)
     return render(request, "adminlogin.html")
 
 def logout_view(request):

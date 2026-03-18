@@ -8,7 +8,6 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('admin/dashboard/', views.admindashboard, name='admindashboard'),
     path('adminlogin/',views.adminlogin,name='adminlogin'),
-    path('login_view/', views.login_view, name='login_view'), 
     path('library/', views.library, name='library'),
     
     # Book Management (Standardized Slashes)
