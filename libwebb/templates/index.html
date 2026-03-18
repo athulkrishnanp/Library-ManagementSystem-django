@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library | Home</title>
+
+    <style>
+        :root {
+            --primary-blue: #1a73e8; /* Matches your Admin Dashboard */
+            --header-bg: #1a1b1e;    /* Deep matte black */
+            --text-white: #ffffff;
+            --text-gray: #bdc1c6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            /* Background matches your previous home style but with fixed positioning */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                        url("{% static 'images/2.jpg' %}") center/cover no-repeat fixed;
+            height: 100vh;
+            color: var(--text-white);
+        }
+
+        /* ---------------- BLACK NAVBAR ---------------- */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--header-bg);
+            padding: 0 5%;
+            height: 72px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            height: 42px;
+            width: auto;
+        }
+
+        /* Logo decoration using your project's blue */
+        .logo-accent {
+            height: 28px;
+            width: 3px;
+            background: var(--primary-blue);
+            border-radius: 4px;
+        }
+
+        .brand-text-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            color: var(--text-white);
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        .brand-sub {
+            color: var(--primary-blue);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* Login Button - Matches Dashboard Style */
+        .login-btn {
+            text-decoration: none;
+            color: var(--text-white);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 22px;
+            border-radius: 6px;
+            background: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .login-btn:hover {
+            background: #1557b0; /* Darker blue on hover */
+            border-color: #1557b0;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+
+        /* ---------------- HERO SECTION ---------------- */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 72px);
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .quote {
+            font-size: clamp(24px, 5vw, 40px);
+            font-weight: 600;
+            max-width: 800px;
+            line-height: 1.4;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        .author {
+            color: var(--text-gray);
+            font-size: clamp(18px, 3vw, 26px);
+            margin-top: 25px;
+            font-weight: 400;
+            font-style: italic;
+            animation: fadeIn 1.2s ease-out 0.4s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---------------- MOBILE RESPONSIVENESS ---------------- */
+        @media (max-width: 650px) {
+            .navbar { padding: 0 15px; }
+            .logo-accent, .brand-sub { display: none; }
+            .brand-name { font-size: 1.1rem; }
+            .login-btn { padding: 8px 15px; font-size: 13px; }
+            .login-btn svg { width: 16px; height: 16px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="brand-section">
+            <img src="{% static 'images/1.png' %}" alt="Logo" class="logo-img">
+            
+            <div class="logo-accent"></div>
+            
+            <div class="brand-text-group">
+                <span class="brand-name">LIBRARY</span>
+                <span class="brand-sub">Management System</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <a href="adminlogin" class="login-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <polyline points="10 17 15 12 10 7"></polyline>
+                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                </svg>
+                <span>Login</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="hero">
+        <p class="quote">“I read a book one day and my whole life was changed.”</p>
+        <p class="author">— Orhan Pamuk</p>
+    </main>
+
+</body>
+
+</html>
