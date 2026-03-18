@@ -3,23 +3,21 @@ import pymysql
 from pathlib import Path
 from dotenv import load_dotenv
 
-# 1. Database Trick for Cloud/Vercel/Render
+# 1. Database Trick for Cloud
 pymysql.install_as_MySQLdb()
 
-# 2. Load .env file for local development
+# 2. Load .env file
 load_dotenv()
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-s^$d(*3ru9=vuevh)y0tnt_#yfel^px!h)clo_82fo5kp$#(r@')
+# SECURITY
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-123')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# Set this to True temporarily if you need to see exact error messages
-DEBUG = False
+# Set to False for production, True for local debugging
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-# 3. Allow all hosts to fix the "Bad Request (400)" error
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -30,12 +28,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'libwebb', # Your App
+    'libwebb', 
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # 4. WhiteNoise for CSS/JS
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Essential for Render/Vercel
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,7 +62,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'library.wsgi.application'
 
-# 5. Database Configuration for Aiven Cloud MySQL
+# 5. Database Configuration (Aiven Cloud MySQL)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -74,7 +72,7 @@ DATABASES = {
         'HOST': 'mysql-2f3f44fb-athulkrish36-84f9.a.aivencloud.com',
         'PORT': '24860',
         'OPTIONS': {
-            # Fixes the SSL Certificate error on Render/Vercel
+            # SSL logic: Uses cert locally, bypasses on Render/Vercel
             'ssl': {'ca': None} if os.getenv('RENDER') or os.getenv('VERCEL') else {'ca': os.path.join(BASE_DIR, 'ca-certificate.crt')},
         },
     }
@@ -84,8 +82,6 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Internationalization
@@ -94,18 +90,18 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# 6. Static Files Configuration (CSS/JS/Images)
-STATIC_URL = 'static/'
+# 6. Static Files (THE FIX FOR YOUR IMAGES)
+STATIC_URL = '/static/'
 
-# This is the "missing link" that was causing the crash
+# This tells Django where to find your images inside libwebb
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'libwebb', 'static'),
 ]
 
+# This is where all files are gathered during 'collectstatic'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Use this specific WhiteNoise storage (it's more stable for first-time deploys)
+# Use 'CompressedStaticFilesStorage' - it's much more forgiving than 'Manifest'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
