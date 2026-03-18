@@ -13,7 +13,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
-SECRET_KEY = os.getenv('firstdeploylibrary', 'django-insecure-fallback-key-123')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-123')
 
 # Set to False for production, True for local debugging
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
