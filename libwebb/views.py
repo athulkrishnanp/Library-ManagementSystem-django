@@ -1,36 +1,64 @@
-from django.shortcuts import render,redirect
+import os
+import logging
+from django.shortcuts import render, redirect
 from django.db import connection
 from django.contrib import messages
+from django.http import JsonResponse
+from dotenv import load_dotenv
 
+# Load environment variables (Make sure ADMIN_USERNAME & ADMIN_PASSWORD are in your .env)
+load_dotenv()
+
+# --- PUBLIC VIEWS ---
 
 def index(request):
     return render(request, 'index.html')
 
-def admindashboard(request):
-    return render(request, 'admindashboard.html')
-
 def adminlogin(request):
+    # If already logged in, skip login page
+    if request.session.get('is_admin_logged_in'):
+        return redirect('libwebb:library')
     return render(request, 'adminlogin.html')
 
-ADMIN_USERNAME = "athul007"
-ADMIN_PASSWORD = "athul@9841"
-
 def login_view(request):
+    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
 
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            request.session['is_admin_logged_in'] = True
+            # Standard Django session lasts for 2 weeks by default
             return redirect('libwebb:library')
         else:
             return render(request, "adminlogin.html", {"error": "Invalid Username or Password"})
 
     return render(request, "adminlogin.html")
 
-from django.db import connection
+def logout_view(request):
+    if 'is_admin_logged_in' in request.session:
+        del request.session['is_admin_logged_in']
+    return redirect('libwebb:index')
+
+# --- PROTECTED VIEWS (Admin Only) ---
+
+def library(request):
+    # Security Check: Kick out non-admins
+    if not request.session.get('is_admin_logged_in'):
+        return redirect('libwebb:adminlogin')
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM books")
+        books = cursor.fetchall()
+
+    return render(request, "library.html", {"books": books})
 
 def add_book(request):
+    if not request.session.get('is_admin_logged_in'):
+        return redirect('libwebb:adminlogin')
+
     if request.method == "POST":
         data = [
             request.POST.get('book_id'),
@@ -39,7 +67,7 @@ def add_book(request):
             request.POST.get('language'),
             request.POST.get('date_of_buy'),
             request.POST.get('category'),
-            'Available', # Default status for new books
+            'Available', 
             request.POST.get('remarks')
         ]
         with connection.cursor() as cursor:
@@ -47,69 +75,24 @@ def add_book(request):
                 INSERT INTO books (book_id, title, author, language, date_of_buy, category, status, remarks)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, data)
-        return redirect('library') # Go back to dashboard to see the new book
+        messages.success(request, "Book added successfully!")
+        return redirect('libwebb:library')
 
 def delete_book(request):
+    if not request.session.get('is_admin_logged_in'):
+        return redirect('libwebb:adminlogin')
+
     if request.method == "POST":
         book_id = request.POST.get('book_id')
         with connection.cursor() as cursor:
             cursor.execute("DELETE FROM books WHERE book_id = %s", [book_id])
+        messages.warning(request, f"Book {book_id} deleted.")
         return redirect('libwebb:library')
 
-def logout_view(request):
-    # Since you aren't using Django Auth, just redirect to login
-    return redirect('adminlogin')
-
-def library(request):
-
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM books")
-        books = cursor.fetchall()
-
-    return render(request, "library.html", {"books": books})
-
-from django.http import JsonResponse
-
-from django.http import JsonResponse
-import logging
-
-def get_book_details(request):
-    book_id = request.GET.get('book_id', None)
-    try:
-        # Using a dictionary cursor so we fetch by name, not number
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT title, author, language, category, date_of_buy, status, remarks 
-                FROM books 
-                WHERE book_id = %s
-            """, [book_id])
-            
-            row = cursor.fetchone()
-            
-            # Debugging: This will print to your terminal so you can see the data
-            print(f"DEBUG: Found row: {row}")
-
-            if row:
-                # We map based on the EXACT order in the SELECT above
-                return JsonResponse({
-                    'success': True,
-                    'title': str(row[0] or ""),
-                    'author': str(row[1] or ""),
-                    'language': str(row[2] or ""),
-                    'category': str(row[3] or ""),
-                    'date': str(row[4]) if row[4] else "",
-                    'status': str(row[5] or "Available"),
-                    'remarks': str(row[6] or "")
-                })
-            
-            return JsonResponse({'success': False, 'message': 'Book ID not found'})
-            
-    except Exception as e:
-        print(f"Database Error: {e}")
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
-
 def update_book(request):
+    if not request.session.get('is_admin_logged_in'):
+        return redirect('libwebb:adminlogin')
+
     if request.method == "POST":
         book_id = request.POST.get('book_id')
         title = request.POST.get('title')
@@ -118,6 +101,7 @@ def update_book(request):
         category = request.POST.get('category')
         date_of_buy = request.POST.get('date_of_buy')
         status = request.POST.get('status')
+        # Logic: If status isn't Borrowed, clear the remarks
         remarks = request.POST.get('remarks') if status == 'Borrowed' else ""
 
         with connection.cursor() as cursor:
@@ -129,21 +113,41 @@ def update_book(request):
         
         messages.success(request, f"Book {book_id} updated successfully!")
         return redirect('libwebb:library')
-    
-from django.http import JsonResponse
-from django.db import connection
+
+# --- API / HELPER VIEWS ---
+
+def get_book_details(request):
+    book_id = request.GET.get('book_id', None)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT title, author, language, category, date_of_buy, status, remarks 
+                FROM books 
+                WHERE book_id = %s
+            """, [book_id])
+            row = cursor.fetchone()
+
+            if row:
+                return JsonResponse({
+                    'success': True,
+                    'title': str(row[0] or ""),
+                    'author': str(row[1] or ""),
+                    'language': str(row[2] or ""),
+                    'category': str(row[3] or ""),
+                    'date': str(row[4]) if row[4] else "",
+                    'status': str(row[5] or "Available"),
+                    'remarks': str(row[6] or "")
+                })
+            return JsonResponse({'success': False, 'message': 'Book ID not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 def get_all_book_titles(request):
     try:
         with connection.cursor() as cursor:
-            # Fetching ID and Title for the suggestion list
             cursor.execute("SELECT book_id, title FROM books")
             rows = cursor.fetchall()
-            # Format: "#101 - Harry Potter"
             suggestions = [f"{row[0]} - {row[1]}" for row in rows]
             return JsonResponse({'suggestions': suggestions})
     except Exception as e:
         return JsonResponse({'suggestions': []}, status=500)
-    
-import os
-print(f"DEBUG: Looking for templates in: {os.path.join(os.getcwd(), 'templates')}")
